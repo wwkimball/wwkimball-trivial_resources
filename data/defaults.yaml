@@ -35,4 +35,13 @@ trivial_resources::packages::packageConfig:
     ensure: present
 ##
 
+##
+# Set of tidy rules for keeping stale files off the host.
+trivial_resources::tidies::tidyRules:
+ '/tmp':
+   age: 2w
+   recurse: true
+   rmdirs: true
+##
+
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
