@@ -1,6 +1,11 @@
 {
   "author": "William Kimball",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "name": "puppetlabs/stdlib",
+      "version_requirement": "4.3.2"
+    }
+  ],
   "license": "GPLv2",
   "name": "tlg-trivial_resources",
   "operatingsystem_support": [

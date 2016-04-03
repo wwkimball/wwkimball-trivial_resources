@@ -1,0 +1,38 @@
+---
+##
+# Default parameter values for the various classes of the trivial_resources
+# module.
+##
+
+##
+# The default set of hosts for each machine
+trivial_resources::hosts::hostsMap:
+  localhost:
+    ip: 127.0.0.1
+    host_aliases:
+      - localhost.localdomain
+      - localhost4
+      - localhost4.localdomain4
+      - "%{::hostname}"
+      - "%{::fqdn}"
+  localhost6:
+    ip: "::1"
+    host_aliases:
+      - localhost6.localdomain6
+##
+
+##
+# Set of packages with specified states that are guaranteed to be enforced on
+# every host.
+trivial_resources::packages::packageConfig:
+  lsof:
+    ensure: present
+  yum-utils:
+    ensure: present
+  yum-priorities:
+    ensure: present
+  vim:
+    ensure: present
+##
+
+# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

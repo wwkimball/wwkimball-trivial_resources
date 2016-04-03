@@ -1,0 +1,17 @@
+################################################################################
+#                     THIS FILE IS UNDER PUPPET CONTROL!                       #
+################################################################################
+<%
+if @config and !@config.empty? and @config.is_a?(Hash)
+  @config.sort.each { |key, value|
+    %><%= "#{key} = #{value}\n" %><%
+  }
+else
+  %>
+#
+# ERROR:
+# The $config hash value is missing or of an incorrect data type in the
+# calling Puppet module.
+#
+  <%
+end %>

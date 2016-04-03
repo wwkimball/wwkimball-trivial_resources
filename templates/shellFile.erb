@@ -1,0 +1,110 @@
+################################################################################
+#                     THIS FILE IS UNDER PUPPET CONTROL!                       #
+################################################################################
+<%
+###
+# Returns a non-empty, shell script variable assignment snippet.  The resulting
+# line may optionally export the value to subprocesses.
+#
+# Parameters:
+# - varName <string> Name of the shell variable to update
+# - varValue <string> Value to assign/append to the shell variable
+# - exportToSubs <boolean> true = export variable to subprocesses; false
+#   otherwise
+# - prefixValue <boolean> One of:
+#   true: prefix varValue to existing values of varName
+#   false: postfix varValue to existing values of varName
+#   nil: no concatenation, varValue is absolute
+#
+# Returns:
+# <string> A shell script snippet that assigns/appends the variable
+##
+def getConfigLine(varName, varValue, exportToSubs = false, prefixValue = nil)
+  configLine = ''
+
+  # Selectively allow variables to be exported to subprocesses
+  exportPhrase = ''
+  if (exportToSubs)
+    exportPhrase = 'export '
+  end
+
+  # Ignore empty values
+  if !varValue.to_s.empty?
+    if prefixValue.nil?
+      # No concatenation
+      configLine = "#{exportPhrase}#{varName}=#{varValue}\n"
+    elsif prefixValue
+      # Prefix concatenation
+      configLine = <<EOB
+if [ -z "$#{varName}" ]; then
+  #{exportPhrase}#{varName}="#{varValue}"
+else
+  #{exportPhrase}#{varName}="#{varValue} ${#{varName}}"
+fi
+EOB
+    else
+      # Postfix concatenation
+      configLine = <<EOB
+if [ -z "$#{varName}" ]; then
+  #{exportPhrase}#{varName}="#{varValue}"
+else
+  #{exportPhrase}#{varName}="${#{varName}} #{varValue}"
+fi
+EOB
+    end
+  end
+
+  return configLine
+end
+
+def getConfigSection(varName, varValue)
+  configSection = ''
+
+  # Anticipate hashes as values for known special cases
+  if varValue.is_a?(Hash)
+    case varName.upcase
+      when 'PREPEND'
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = false, prefixValue = true)
+        }
+      when 'APPEND'
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = false, prefixValue = false)
+        }
+      when 'EXPORT'
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = true, prefixValue = nil)
+        }
+      when 'EXPORTPREPEND'
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = true, prefixValue = true)
+        }
+      when 'EXPORTAPPEND'
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = true, prefixValue = false)
+        }
+      else
+        varValue.sort.each { |configKey, configValue|
+          configSection << getConfigLine(configKey, configValue, exportToSubs = false, prefixValue = nil)
+        }
+    end
+  else
+    configSection = getConfigLine(varName, varValue, exportToSubs = false, prefixValue = nil)
+  end
+
+  return configSection
+end
+
+if @config and !@config.empty? and @config.is_a?(Hash)
+  @config.sort.each { |key, value|
+    %><%= getConfigSection(key, value) %><%
+  }
+else
+  %>
+#
+# ERROR:
+# The $config hash value is missing or of an incorrect data type in the
+# calling Puppet module.
+#
+  <%
+end %>

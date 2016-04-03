@@ -1,0 +1,331 @@
+<%
+################################################################################
+# This ERB template constructs XML elements from a Hash.  It can also optionally
+# perform deep merges of Arrays of Hashes on an additional merge-key dictionary
+# named @mergeKeys.  This deserialization process follows these rules, which are
+# recursive to enable very complex XML:
+# 1. The outermost element of your Hash defines the root node of this XML.
+# 2. XML comments are not supported.
+# 3. All nodes are alphabetized except Array elements, which are written as-is.
+#    This is necessary to make this ERB idempotent because Hash elements are
+#    generally randomized.
+# 4. A simple key-value pair creates an element of the key name that wraps the
+#    specified value.  Example:  { "container" => "some value" } becomes
+#    <container>some value</container>
+# 5. Hashes are treated as:
+#    a. A Hash may contain simple values, other Hashes, and Arrays.  Any other
+#       encountered data types are written as-is after to_s is called against
+#       the object.
+#    b. A Hash that has no non-attribute children is a self-terminated node.
+#       Example:  { "container" } becomes <container/>
+#    c. Immediate children with names starting with "attribute." are converted
+#       to attributes of the containing node with "attribute." stripped off.
+#       Example:  { "container" => { "attribute.name" => "default" } }
+#       becomes <container name="default"/>
+#    d. When a hash contains exactly one non-attribute child with name,
+#       "value.text", the containing node wraps that value.  This is synonymous
+#       with a simple key-value pair and is most useful when you need to add
+#       attributes to a container node along with a wrapped value.  Example:
+#       { "container" => { "attribute.name" => "default", "value.text" => "some value" } }
+#       becomes <container name="default">some value</container>
+#    e. When a hash contains exactly one non-attribute child with name,
+#       "value.cdata", the containing node wraps that value as CDATA.  Example:
+#       { "container" => { "attribute.name" => "default", "value.cdata" => "some value" } }
+#       becomes <container name="default"><![CDATA[some value]]></container>
+# 6. Arrays are treated as:
+#    a. Arrays may contain Hashes, attributes, and simple values.  Any other
+#       encountered data types are written as-is after to_s is called against
+#       the object.
+#    b. Array elements are written to the ERB in the order they appear in the
+#       Hash.  This is usually safe for idempotent ERBs.
+#    c. Every Array element will become an XML element with the same name as the
+#       Hash key that contains the Array.  Example:
+#       { "parent" => { "child" => [ "value1", "value2" ] } }
+#       becomes <parent><child>value1</child><child>value2</child></parent>
+# 7. The form of the @mergeKeys dictionary -- if provided -- is simply:
+#   # Note that each level of the @config Hash's hierarchy is separated by ':'
+#   @mergeKeys = {
+#     ':Arbitrary:Node:Depth:Identifier'  => 'merge-on-attribute-name',
+#     ':Arbitrary:Additional:Node'        => 'additional-merge-attribute'
+#   }
+#
+# YAML-to-XML Example
+#
+# This YAML:
+# ---
+# trivial_resources::configfiles::xmlFiles:
+#   '/etc/anotherapp/config.xml':
+#     config:
+#       settings:
+#         network:
+#           port:
+#             attribute.auto-increment: true
+#             attribute.port-count: 100
+#             value.text: 65432
+#           ssl:
+#             attribute.enabled: false
+#         worker:
+#           - attribute.name: priority
+#             memory: 128
+#             priority: 1
+#           - attribute.name: default
+#             memory: 256
+#             priority: 5
+#           - attribute.name: bulk
+#             memory: 512
+#             priority: 10
+#
+# Becomes this XML:
+# <settings>
+#     <network>
+#         <join>
+#             <aws enabled="false"/>
+#             <multicast enabled="false"/>
+#             <tcp-ip enabled="true">
+#                 <member-list>
+#                     <member>123.0.0.1</member>
+#                     <member>123.0.0.2</member>
+#                     <member>123.0.0.3</member>
+#                 </member-list>
+#             </tcp-ip>
+#         </join>
+#     </network>
+# </settings>
+################################################################################
+
+###
+# Deserializes a Hash into XML as a String
+#
+# Parameters:
+# - nodeName <string>: Name of the node that is being deserialized
+# - nodeProps <any>: The child nodes of the Hash being deserialized
+# - indentLevel <integer>: Indentation level for this XML element
+#
+# Returns:
+# <string> The deserialized XML
+##
+def hashToXML(nodeName, nodeProps, indentLevel)
+  indentBuffer = "\t" * indentLevel
+  xmlStream = "#{indentBuffer}<#{nodeName}"
+
+  # Apply node attributes in alphabetic order for idempotency
+  attributeNodes = nodeProps.select { |childName, childValue|
+    childName.to_s =~ /^attribute\..+/i
+  }.sort.each { |childName, childValue|
+    if childName.to_s =~ /^attribute\.(.+)/i
+      xmlStream = xmlStream << " " << $1 << "=\"#{childValue}\""
+    end
+  }
+
+  # Apply the remaining child nodes
+  otherNodes = nodeProps.select { |childName, childValue|
+    !(childName.to_s =~ /^attribute\..+/i)
+  }
+
+  if (0 == otherNodes.length)
+    # When there are no child nodes, self-terminate the container
+    xmlStream = xmlStream << "/>\n"
+  elsif ((1 == otherNodes.length) && ('value.text' == otherNodes[0][0].to_s))
+    # When there is only one child node AND its name is value.text, just write
+    # the value directly to the stream.
+    xmlStream = xmlStream << ">" << otherNodes[0][1].to_s << "</#{nodeName}>\n"
+  elsif ((1 == otherNodes.length) && ('value.cdata' == otherNodes[0][0].to_s))
+    # When there is only one child node AND its name is value.cdata, wrap the
+    # value in CDATA section markers inject the result into the stream.
+    xmlStream = xmlStream << "><![CDATA[" << otherNodes[0][1].to_s << "]]></#{nodeName}>\n"
+  else
+    xmlStream = xmlStream << ">\n"
+    otherNodes.sort.each { |propNode, propChildren|
+      xmlStream = xmlStream << nodeToXML(propNode, propChildren, indentLevel + 1)
+    }
+    xmlStream = xmlStream << "#{indentBuffer}</#{nodeName}>\n"
+  end
+
+  return xmlStream
+end
+
+###
+# Deserializes an Array into XML as a String
+#
+# Parameters:
+# - nodeName <string>: Repeating name of the nodes that are being deserialized
+# - nodeProps <any>: The elements of the Array being deserialized
+# - indentLevel <integer>: Indentation level for this XML element group
+#
+# Returns:
+# <string> The deserialized XML
+##
+def arrayToXML(nodeName, nodeProps, indentLevel)
+  xmlStream = ''
+  
+  nodeProps.each { |childNode|
+    xmlStream = xmlStream << nodeToXML(nodeName, childNode, indentLevel)
+  }
+  
+  return xmlStream
+end
+
+###
+# Deserializes any key-value pair into XML as a String
+#
+# Parameters:
+# - nodeKey <string>: Name of the node that is being deserialized
+# - nodeValue <any>: The data of the node that is being deserialized
+# - indentLevel <integer>: Indentation level for this XML element
+#
+# Returns:
+# <string> The deserialized XML
+##
+def nodeToXML(nodeKey, nodeValue, indentLevel)
+  indentBuffer = "\t" * indentLevel
+  xmlStream = ''
+
+  # Identify the data type of nodeValue and deserialize appropriately
+  if nodeValue.is_a?(Hash)
+    xmlStream = hashToXML(nodeKey, nodeValue, indentLevel)
+  elsif nodeValue.kind_of?(Array)
+    xmlStream = arrayToXML(nodeKey, nodeValue, indentLevel)
+  else
+    xmlStream = "#{indentBuffer}<#{nodeKey}>#{nodeValue.to_s}</#{nodeKey}>\n"
+  end
+
+  return xmlStream
+end
+
+###
+# Deserialize a Puppet-provided configuration Hash into XML as a String
+#
+# Parameters:
+# - hashNode <hash>: The configuration Hash that is being deserialized
+# - indentLevel <integer>: Base indentation level for the deserialized XML
+#
+# Returns:
+# <string> The deserialized XML
+##
+def configToXML(hashNode, indentLevel)
+  # Must receive a valid Hash
+  if !hashNode or hashNode.empty? or !hashNode.is_a?(Hash)
+    return "<!-- configToXML: hashNode is empty or not a Hash -->\n"
+  end
+
+  # Apply the hash nodes in alphabetic order for idempotency
+  xmlStream = ''
+  hashNode.sort.each { |name, properties|
+    xmlStream = xmlStream << nodeToXML(name, properties, indentLevel)
+  }
+  return xmlStream
+end
+
+###
+# Helps deepMergeArrayOfHashes recursively seek additional merge targets.
+#
+# Parameters:
+# - lhs <Any> The left-hand merge target
+# - rhs <Any> The right-hand merge source
+# - mergeKeys <Hash> The lookup table of merge keys
+# - crumbTrail <String> (INTERNAL) Provided by deepMergeHash
+#
+# Returns:
+# <Any> Merged result
+##
+def subMergeHelper(lhs, rhs, mergeKeys, crumbTrail)
+  lhs.merge(rhs){|subKey, subLHS, subRHS|
+    mergeTrail = crumbTrail + ':' + subKey
+    case subLHS
+    when Array
+      deepMergeArrayOfHashes(subLHS + subRHS, mergeKeys, mergeTrail)
+    when Hash
+      subMergeHelper(subLHS, subRHS, mergeKeys, mergeTrail)
+    else
+      subRHS
+    end
+  }
+end
+
+###
+# Merges an Array of Hashes on an externally-provided key.
+#
+# Parameters:
+# - arrayOfHashes <Array> The Array-of-Hashes to merge
+# - mergeKeys <Hash> The lookup table of merge keys
+# - crumbTrail <String> (INTERNAL) Provided by deepMergeHash
+#
+# Returns:
+# <Array> Merged result
+##
+def deepMergeArrayOfHashes(arrayOfHashes, mergeKeys, crumbTrail)
+  mergedArray = arrayOfHashes
+
+  if arrayOfHashes.all? {|e| e.class == Hash}
+    if mergeKeys.has_key?(crumbTrail)
+      mergeKey = mergeKeys[crumbTrail]
+      mergedArray = arrayOfHashes.group_by{|evalHash| evalHash[mergeKey]}.map{|groupID, groupArrayOfHashes|
+        groupArrayOfHashes.reduce({}){|memoHash, evalHash|
+          memoHash.merge(evalHash){|hashKey, lhs, rhs|
+            deepTrail = crumbTrail + ':' + hashKey
+            case lhs
+            when Array
+              deepMergeArrayOfHashes(lhs + rhs, mergeKeys, deepTrail)
+            when Hash
+              subMergeHelper(lhs, rhs, mergeKeys, deepTrail)
+            else
+              rhs
+            end
+          }
+        }
+      }.sort_by{|sortHash| sortHash[mergeKey]}
+    else
+      $stderr.puts "[WARNING] deepMergeArrayOfHashes:  received an Array of Hashes without merge key at #{crumbTrail}."
+    end
+  else
+    $stderr.puts "[WARNING] deepMergeArrayOfHashes:  received an Array containing non-Hashes at #{crumbTrail}?"
+  end
+
+  return mergedArray
+end
+
+###
+# Deeply and internally merges a Hash containing Arrays-of-Hashes.
+#
+# Parameters:
+# - hashConfig <Hash> The Hash to scan for Arrays-of-Hashes
+# - mergeKeys <Hash> The lookup table of merge keys
+# - crumbTrail <String> (INTERNAL) Used internally to track Hash merging depth
+#
+# Returns:
+# <Hash> The merged result
+##
+def deepMergeHash(hashConfig, mergeKeys, crumbTrail = '')
+  return hashConfig unless Hash == hashConfig.class
+  mergedConfig = {}
+
+  hashConfig.each{|nodeKey, nodeValue|
+    nodeCrumb = nodeKey
+    testTrail = crumbTrail + ':' + nodeCrumb
+
+    case nodeValue
+    when Hash
+      mergedConfig[nodeKey] = deepMergeHash(nodeValue, mergeKeys, testTrail)
+    when Array
+      mergedConfig[nodeKey] = deepMergeArrayOfHashes(nodeValue, mergeKeys, testTrail)
+    else
+      mergedConfig[nodeKey] = nodeValue
+    end
+  }
+
+  return mergedConfig
+end
+-%>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+################################################################################
+#                     THIS FILE IS UNDER PUPPET CONTROL!                       #
+################################################################################
+-->
+<%=
+if @mergeKeys and !@mergeKeys.empty? and @mergeKeys.is_a?(Hash)
+	configToXML(deepMergeHash(@config, @mergeKeys), 0)
+else
+	configToXML(@config, 0)
+end
+-%>
