@@ -26,13 +26,9 @@ trivial_resources::hosts::hostsMap:
 # every host.
 trivial_resources::packages::packageConfig:
   lsof:
-    ensure: present
   yum-utils:
-    ensure: present
   yum-plugin-priorities:
-    ensure: present
   vim-enhanced:
-    ensure: present
 ##
 
 ##
