@@ -45,7 +45,7 @@ scope.lookupvar("trivial_resources::users::normalUsers").each{|userName, userPro
 
 # Convert the flat Array to a Hash and ensure these are directories.
 flatPaths.each{|homeDir|
-  resourceOwner = fileOwners[homeDir]
+  resourceOwner = homeOwners[homeDir]
 
   allHomeDirs[homeDir] = {
     "ensure"  => "directory",
