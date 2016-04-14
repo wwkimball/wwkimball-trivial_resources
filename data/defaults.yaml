@@ -21,4 +21,32 @@ trivial_resources::hosts::hostsMap:
       - localhost6.localdomain6
 ##
 
+##
+# The least number of sane firewall rules for each machine
+trivial_resources::firewall::preRules:
+  '000 accept all ICMP':
+    proto: icmp
+    action: accept
+  '001 accept all packets to localhost':
+    proto: all
+    iniface: lo
+    action: accept
+  '002 reject local packets from foreign interfaces':
+    iniface: ! lo
+    proto: all
+    destination: 127.0.0.1/8
+    action: reject
+  '003 permit ongoing traffic':
+    proto: all
+    state:
+      - RELATED
+      - ESTABLISHED
+    action: accept
+
+trivial_resources::firewall::postRules:
+  '999 drop all':
+    proto: all
+    action: drop
+##
+
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

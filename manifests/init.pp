@@ -22,6 +22,7 @@ class trivial_resources {
   -> class { 'trivial_resources::hosts': }
   -> class { 'trivial_resources::repos': }
   -> class { 'trivial_resources::packages': }
+  -> class { 'trivial_resources::firewall': }
   -> Class['trivial_resources']
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
