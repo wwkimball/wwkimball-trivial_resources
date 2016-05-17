@@ -32,6 +32,8 @@
 #       "value.cdata", the containing node wraps that value as CDATA.  Example:
 #       { "container" => { "attribute.name" => "default", "value.cdata" => "some value" } }
 #       becomes <container name="default"><![CDATA[some value]]></container>
+#    f. When a hash contains a child named "merge.delete" that is set to any
+#       non-false value, that entire hash is discarded.
 # 6. Arrays are treated as:
 #    a. Arrays may contain Hashes, attributes, and simple values.  Any other
 #       encountered data types are written as-is after to_s is called against
@@ -105,6 +107,11 @@
 # <string> The deserialized XML
 ##
 def hashToXML(nodeName, nodeProps, indentLevel)
+  # Discard when a merge.delete directive is set
+  if nodeProps && nodeProps['merge.delete']
+    return ''
+  end
+
   indentBuffer = "\t" * indentLevel
   xmlStream = "#{indentBuffer}<#{nodeName}"
 
@@ -125,11 +132,11 @@ def hashToXML(nodeName, nodeProps, indentLevel)
   if (0 == otherNodes.length)
     # When there are no child nodes, self-terminate the container
     xmlStream = xmlStream << "/>\n"
-  elsif ((1 == otherNodes.length) && ('value.text' == otherNodes[0][0].to_s))
+  elsif ((1 == otherNodes.length) && (!otherNodes[0].nil?) && ('value.text' == otherNodes[0][0].to_s))
     # When there is only one child node AND its name is value.text, just write
     # the value directly to the stream.
     xmlStream = xmlStream << ">" << otherNodes[0][1].to_s << "</#{nodeName}>\n"
-  elsif ((1 == otherNodes.length) && ('value.cdata' == otherNodes[0][0].to_s))
+  elsif ((1 == otherNodes.length) && (!otherNodes[0].nil?) && ('value.cdata' == otherNodes[0][0].to_s))
     # When there is only one child node AND its name is value.cdata, wrap the
     # value in CDATA section markers inject the result into the stream.
     xmlStream = xmlStream << "><![CDATA[" << otherNodes[0][1].to_s << "]]></#{nodeName}>\n"
