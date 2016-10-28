@@ -44,26 +44,12 @@
 #       ensure: absent
 #
 class trivial_resources::hosts {
-  # Attempt to merge all specified hostsMap values across the configuration
-  # hierarchy.  This is not using the automatic parameter lookup pattern due to:
-  # https://tickets.puppetlabs.com/browse/HI-118
-  # http://grokbase.com/t/gg/puppet-users/13ayxyyxmz/merge-behavior-deeper-and-hiera-hash
-  # https://docs.puppetlabs.com/hiera/1/lookup_types.html#priority-default
-  $hostsMap = hiera_hash('trivial_resources::hosts::hostsMap', {})
-
-  # The claim on multiple variations of 'localhost' by IPv4 and IPv6 causes some
-  # applications to become severely confused and even the host itself has been
-  # seen losing touch with its correct domain.  This module reduces the set down
-  # to just one unified localhost record to end this confusion.
-  host { [
-    'localhost.localdomain',
-    'localhost4',
-    'localhost4.localdomain4',
-    'localhost6.localdomain6',
-  ]:
-    ensure  => absent,
+  # Permit only Puppet-managed host entries
+  resources { 'host':
+    purge => true,
   }
 
+  $hostsMap = hiera_hash('trivial_resources::hosts::hostsMap', {})
   create_resources(host, $hostsMap)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

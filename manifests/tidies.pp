@@ -26,11 +26,6 @@
 #       rmdirs: true
 #
 class trivial_resources::tidies {
-  # Attempt to merge all specified repo hash values across the configuration
-  # hierarchy.  This is not using the automatic parameter lookup pattern due to:
-  # https://tickets.puppetlabs.com/browse/HI-118
-  # http://grokbase.com/t/gg/puppet-users/13ayxyyxmz/merge-behavior-deeper-and-hiera-hash
-  # https://docs.puppetlabs.com/hiera/1/lookup_types.html#priority-default
   $tidyRules = hiera_hash('trivial_resources::tidies::tidyRules', {})
   create_resources(tidy, $tidyRules)
 }

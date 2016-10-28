@@ -1,16 +1,10 @@
 {
   "author": "William Kimball",
   "dependencies": [
-    {
-      "name": "puppetlabs/stdlib",
-      "version_requirement": "4.x"
-    },
-    {
-      "name": "puppetlabs/firewall",
-      "version_requirement": "1.x"
-    }
+    { "name": "puppetlabs/stdlib", "version_requirement": "4.x" },
+    { "name": "puppetlabs/firewall", "version_requirement": "1.x" }
   ],
-  "license": "GPLv2",
+  "license": "MIT",
   "name": "tlg-trivial_resources",
   "operatingsystem_support": [
     {
@@ -22,14 +16,11 @@
       "operatingsystemrelease": ["6.5", "6.6", "7.0", "7.1"]
     }
   ],
-  "project_page": "https://bitbucket.org/account/user/treelinegamesllc/projects/PUP",
+  "project_page": "https://bitbucket.org/treelinegamesllc/trivial_resources/",
   "requirements": [
-    {
-      "name": "puppet",
-      "version_requirement": ">=3.5.0"
-    }
+    { "name": "puppet", "version_requirement": ">=3.7.0" }
   ],
-  "source": "https://bitbucket.org/treelinegamesllc/trivial_resources",
+  "source": "ssh://git@bitbucket.org:treelinegamesllc/trivial_resources.git",
   "summary": "Puppet-managed resources that are too trivial to warrant their own full-fledged Puppet modules.",
   "tags": [],
   "version": "0.1.0"

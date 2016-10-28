@@ -13,12 +13,14 @@ trivial_resources::hosts::hostsMap:
       - localhost.localdomain
       - localhost4
       - localhost4.localdomain4
-      - "%{::hostname}"
-      - "%{::fqdn}"
   localhost6:
     ip: "::1"
     host_aliases:
       - localhost6.localdomain6
+  "%{::hostname}":
+    ip: "%{::ipaddress}"
+    host_aliases:
+      - "%{::fqdn}"
 ##
 
 ##
