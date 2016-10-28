@@ -35,7 +35,6 @@ scope.lookupvar("trivial_resources::users::normalUsers").each{|userName, userPro
   if userProps
     justUsers[userName] = userProps.clone
     justUsers[userName].delete("sshAuthorizedKeys")
-    justUsers[userName].delete("sshGeneratedKeys")
   else
     justUsers[userName] = {}
   end
@@ -60,7 +59,6 @@ scope.lookupvar("trivial_resources::users::systemUsers").each{|userName, userPro
   if userProps
     justUsers[userName] = userProps.clone
     justUsers[userName].delete("sshAuthorizedKeys")
-    justUsers[userName].delete("sshGeneratedKeys")
   else
     justUsers[userName] = {}
   end

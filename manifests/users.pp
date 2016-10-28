@@ -43,10 +43,6 @@
 #       groups:
 #         - people
 #       password:  ENC[PKCS7,AABhexstringC==]   # EYAML-encoded, pre-encrypted value
-#       sshGeneratedKeys:
-#         id_rsa:
-#           type: rsa2
-#           bits: 4096
 #
 class trivial_resources::users {
   # Attempt to merge all specified user hash values across the configuration
