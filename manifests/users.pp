@@ -45,12 +45,8 @@
 #       password:  ENC[PKCS7,AABhexstringC==]   # EYAML-encoded, pre-encrypted value
 #
 class trivial_resources::users {
-  # Attempt to merge all specified user hash values across the configuration
-  # hierarchy.  This is not using the automatic parameter lookup pattern due to:
-  # https://tickets.puppetlabs.com/browse/HI-118
-  # http://grokbase.com/t/gg/puppet-users/13ayxyyxmz/merge-behavior-deeper-and-hiera-hash
-  # https://docs.puppetlabs.com/hiera/1/lookup_types.html#priority-default
   $normalUsers = hiera_hash('trivial_resources::users::normalUsers', {})
+  $systemUsers = hiera_hash('trivial_resources::users::systemUsers', {})
 
   # Sequence the subclasses
   class { 'trivial_resources::users::parentdirs': }
