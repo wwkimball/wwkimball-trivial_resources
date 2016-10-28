@@ -17,7 +17,7 @@ class trivial_resources::users::accounts {
   $justUsers = parseyaml(inline_template('<%=
 justUsers = {}
 
-# Pull out all users without any of the custom attributes that this class
+# Pull out all normal users without any of the custom attributes that this class
 # enables.  Ensure that a home directory is specified and managed lest Puppet
 # create home-less users.
 scope.lookupvar("trivial_resources::users::normalUsers").each{|userName, userProps|
@@ -45,11 +45,39 @@ scope.lookupvar("trivial_resources::users::normalUsers").each{|userName, userPro
     justUsers[userName]["ensure"] = "present"
   end
 
+  # These must not be system users
+  justUsers[userName]["system"] = false
+
   # Puppet must manage the home directory
   if !justUsers[userName]["home"]
     justUsers[userName]["home"] = userHome
   end
   justUsers[userName]["managehome"] = true
+}
+
+# Add system users.  These accounts must not have passwords, ssh keys, or homes.
+scope.lookupvar("trivial_resources::users::systemUsers").each{|userName, userProps|
+  if userProps
+    justUsers[userName] = userProps.clone
+    justUsers[userName].delete("sshAuthorizedKeys")
+    justUsers[userName].delete("sshGeneratedKeys")
+  else
+    justUsers[userName] = {}
+  end
+
+  # Puppet will normally define but not create users
+  if !justUsers[userName]["ensure"]
+    justUsers[userName]["ensure"] = "present"
+  end
+
+  # These must be system users
+  justUsers[userName]["system"] = true
+
+  # Puppet must not manage system user homes
+  justUsers[userName]["managehome"] = false
+
+  # Strip out passwords
+  justUsers[userName].delete("password")
 }
 
 # Send the result back to Puppet
