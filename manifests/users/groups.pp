@@ -20,7 +20,7 @@
 # Sample Usage:  See trivial_resources::users
 #
 class trivial_resources::users::groups {
-  $allGroups = parseyaml(template("%{module_name}/transform_user_groups.erb"))
+  $allGroups = parseyaml(template("${module_name}/transform_user_groups.erb"))
   create_resources(group, $allGroups)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

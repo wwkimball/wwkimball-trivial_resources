@@ -14,7 +14,7 @@
 class trivial_resources::users::sshcontrolfiles {
   # And now that all the .ssh directories exist, add all of the standard SSH
   # control files.
-  $allSSHControlFiles = parseyaml(template("%{module_name}/transform_user_sshcontrolfiles.erb"))
+  $allSSHControlFiles = parseyaml(template("${module_name}/transform_user_sshcontrolfiles.erb"))
   create_resources(file, $allSSHControlFiles)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

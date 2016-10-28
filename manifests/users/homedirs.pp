@@ -12,7 +12,7 @@
 # Sample Usage:  See trivial_resources::users
 #
 class trivial_resources::users::homedirs {
-  $allHomeDirs = parseyaml(template("%{module_name}/transform_user_homedirs.erb"))
+  $allHomeDirs = parseyaml(template("${module_name}/transform_user_homedirs.erb"))
   create_resources(file, $allHomeDirs)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

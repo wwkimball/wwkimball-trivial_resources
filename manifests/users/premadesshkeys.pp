@@ -13,7 +13,7 @@
 # Sample Usage:  See trivial_resources::users
 #
 class trivial_resources::users::premadesshkeys {
-  $allPremadeKeys = parseyaml(template("%{module_name}/transform_user_premadesshkeys.erb"))
+  $allPremadeKeys = parseyaml(template("${module_name}/transform_user_premadesshkeys.erb"))
   create_resources(ssh_authorized_key, $allPremadeKeys)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

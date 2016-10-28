@@ -14,7 +14,7 @@
 # Sample Usage:  See trivial_resources::users
 #
 class trivial_resources::users::parentdirs {
-  $allParentDirs = parseyaml(template("%{module_name}/transform_user_parentdirs.erb"))
+  $allParentDirs = parseyaml(template("${module_name}/transform_user_parentdirs.erb"))
   create_resources(file, $allParentDirs)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

@@ -16,7 +16,7 @@ class trivial_resources::users::sshdirs {
   # home-directories exist" exercise to also ensure all these users' .ssh
   # directories exist.  These won't need special splitting treatment because
   # all parent directories have already been handled.
-  $allSSHDirs = parseyaml(template("%{module_name}/transform_user_sshdirs.erb"))
+  $allSSHDirs = parseyaml(template("${module_name}/transform_user_sshdirs.erb"))
   create_resources(file, $allSSHDirs)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
