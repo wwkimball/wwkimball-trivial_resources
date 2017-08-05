@@ -1,4 +1,4 @@
-# Class: tlg_base::configfiles
+# Class: trivial_resources::configfiles
 #
 # This class provides a generic means of configuring arbitrary text-based
 # configuration files.  In general, you do NOT want to use this mechanism
@@ -8,60 +8,19 @@
 # end-user preference files).  Supported types include "Java-style Properties",
 # "Shell Script Variables", "Windows-style INI", and XML.
 #
-# Parameters:
-# - iniFiles: Hash with repeating* structure:
-#   FILE_PATH*:
-#     ensure: absent|present
-#     owner: File owner's name or ID
-#     group: File owner's group or GID
-#     config:
-#       SECTION_NAME*:
-#         KEY_NAME*: VALUE
-# - propertyFiles
-#   FILE_PATH*:
-#     ensure: absent|present
-#     owner: File owner's name or ID
-#     group: File owner's group or GID
-#     config:
-#       KEY_NAME*: VALUE
-# - shellFiles
-#   FILE_PATH*:
-#     ensure: absent|present
-#     owner: File owner's name or ID
-#     group: File owner's group or GID
-#     config:
-#       KEY_NAME*: VALUE
-#       export:
-#         EXPORT_KEY*: Scalar value you need exported to subprocesses
-#       prepend:
-#         CONCAT_KEY*: Value that must be prefixed to same-named variables
-#       append:
-#         CONCAT_KEY*: Value to append to the end of same-named variables
-#       exportprepend:
-#         EXPORT_CAT*: Exports a prepended value
-#       exportappend:
-#         EXPORT_CAT*: Exports an appended value
-# - xmlFiles
-#   FILE_PATH:
-#     ensure: absent|present
-#     owner: File owner's name or ID
-#     group: File owner's group or GID
-#     config:
-#       ROOT_CONTAINER_NAME:
-#         XML_SERIALIZED_AS_YAML
+# Parameters:  see init.pp
 #
 # Actions:
 # - Creates or destroys the indicated configuration files
 #
-# Requires: see metadata.json
+# Requires: see init.pp
 #
 # Sample Usage:
-# This class is called and configured via Hiera.  Minimalist Hiera-YAML example:
 #   ---
 #   classes:
-#     - tlg_base
+#     - trivial_resources
 #
-#   tlg_base::configfiles::iniFiles:
+#   trivial_resources::ini_files:
 #     '/etc/myapp/app.ini':
 #       config:
 #         section_name:
@@ -78,7 +37,7 @@
 #             - Value 2
 #             - Value N
 #
-#   tlg_base::configfiles::propertyFiles:
+#   trivial_resources::property_files:
 #     '/etc/myapp/app.properties':
 #       config:
 #         myKey1: Some Value
@@ -88,7 +47,7 @@
 #         theirKey1: 5280
 #         theirKey2: Some other value
 #
-#   tlg_base::configfiles::shellFiles:
+#   trivial_resources::shell_files:
 #     '/etc/tomcat7.d/myApp.sh':
 #       config:
 #         MY_KEY: Any long text value
@@ -109,7 +68,7 @@
 #           EXPORT_POST_CAT: Exports an appended value
 #           EXPORTED_CONCAT_KEY_N: More...
 #
-#   tlg_base::configfiles::xmlFiles:
+#   trivial_resources::xml_files:
 #     '/etc/anotherapp/config.xml':
 #       config:
 #         settings:
@@ -131,77 +90,41 @@
 #               memory: 512
 #               priority: 10
 #
-class tlg_base::configfiles {
-  define ini_file(
-    $ensure = present,
-    $owner  = 'root',
-    $group  = 'root',
-    $config = undef,
-  ) {
-    file { $name:
-      ensure  => $ensure,
-      owner   => $owner,
-      group   => $group,
-      content => template('tlg_base/iniFile.erb'),
+class trivial_resources::configfiles {
+  pick($trivial_resources::ini_files, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    ::trivial_resources::defines::ini_file {
+      $resource_name: *=> $resource_props;
     }
   }
 
-  define property_file(
-    $ensure = present,
-    $owner  = 'root',
-    $group  = 'root',
-    $config = undef,
-  ) {
-    file { $name:
-      ensure  => $ensure,
-      owner   => $owner,
-      group   => $group,
-      content => template('tlg_base/propertyFile.erb'),
+  pick($trivial_resources::property_files, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    ::trivial_resources::defines::property_file {
+      $resource_name: *=> $resource_props;
     }
   }
 
-  define shell_file(
-    $ensure = present,
-    $owner  = 'root',
-    $group  = 'root',
-    $config = undef,
-  ) {
-    file { $name:
-      ensure  => $ensure,
-      owner   => $owner,
-      group   => $group,
-      content => template('tlg_base/shellFile.erb'),
+  pick($trivial_resources::shell_files, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    ::trivial_resources::defines::shell_file {
+      $resource_name: *=> $resource_props;
     }
   }
 
-  define xml_file(
-    $ensure = present,
-    $owner  = 'root',
-    $group  = 'root',
-    $config = undef,
-  ) {
-    file { $name:
-      ensure  => $ensure,
-      owner   => $owner,
-      group   => $group,
-      content => template('tlg_base/xmlFile.erb'),
+  pick($trivial_resources::xml_files, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    ::trivial_resources::defines::xml_file {
+      $resource_name: *=> $resource_props;
     }
   }
-
-  # Attempt to merge all specified repo hash values across the configuration
-  # hierarchy.  This is not using the automatic parameter lookup pattern due to:
-  # https://tickets.puppetlabs.com/browse/HI-118
-  # http://grokbase.com/t/gg/puppet-users/13ayxyyxmz/merge-behavior-deeper-and-hiera-hash
-  # https://docs.puppetlabs.com/hiera/1/lookup_types.html#priority-default
-  $iniFiles = hiera_hash('tlg_base::configfiles::iniFiles', {})
-  $propertyFiles = hiera_hash('tlg_base::configfiles::propertyFiles', {})
-  $shellFiles = hiera_hash('tlg_base::configfiles::shellFiles', {})
-  $xmlFiles = hiera_hash('tlg_base::configfiles::xmlFiles', {})
-
-  # Pass all the config data to the respective defines
-  create_resources('tlg_base::configfiles::ini_file', $iniFiles)
-  create_resources('tlg_base::configfiles::property_file', $propertyFiles)
-  create_resources('tlg_base::configfiles::shell_file', $shellFiles)
-  create_resources('tlg_base::configfiles::xml_file', $xmlFiles)
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

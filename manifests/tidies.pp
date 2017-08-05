@@ -3,30 +3,33 @@
 # This class generically manages tidy rules, which delete aging files and
 # directories.
 #
-# Parameters:
-# - tidyRules:  A hash of rule definitions based on
-#   https://docs.puppetlabs.com/puppet/latest/reference/type.html#tidy
-#   excluding all resource dependency attributes (before/after/require/notify).
+# Parameters:  see init.pp
 #
 # Actions:
 # - Ensures the specified tidy rules are defined
 #
-# Requires: see metadata.json
+# Requires: see init.pp
 #
 # Sample Usage:
-# This class is called and configured via Hiera.  Minimalist Hiera-YAML example:
-#   ---
-#   classes:
-#     - trivial_resources
+# ---
+# classes:
+#   - trivial_resources
 #
-#   trivial_resources::tidies::tidyRules:
-#     '/tmp':
-#       age: 2w
-#       recurse: true
-#       rmdirs: true
+# trivial_resources::tidy_rules:
+#   '/tmp':
+#     age: 2w
+#     recurse: 1
+#     rmdirs: true
 #
 class trivial_resources::tidies {
-  $tidyRules = hiera_hash('trivial_resources::tidies::tidyRules', {})
-  create_resources(tidy, $tidyRules)
+  pick($trivial_resources::tidy_rules, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    tidy {
+      default:        *=> $trivial_resources::tidy_rule_defaults;
+      $resource_name: *=> $resource_props;
+    }
+  }
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

@@ -43,15 +43,6 @@
 #         - 443
 #
 class trivial_resources::firewall {
-  # Attempt to merge all parameter hash values across the configuration
-  # hierarchy.  This is not using the automatic parameter lookup pattern due to:
-  # https://tickets.puppetlabs.com/browse/HI-118
-  # http://grokbase.com/t/gg/puppet-firewall/13ayxyyxmz/merge-behavior-deeper-and-hiera-hash
-  # https://docs.puppetlabs.com/hiera/1/lookup_types.html#priority-default
-  $applicationRules = hiera_hash('trivial_resources::firewall::applicationRules', {})
-  $postRules = hiera_hash('trivial_resources::firewall::postRules', {})
-  $preRules = hiera_hash('trivial_resources::firewall::preRules', {})
-
   # Sequence the subclasses
   class { 'trivial_resources::firewall::purge': }
   -> class { 'trivial_resources::firewall::pre': }

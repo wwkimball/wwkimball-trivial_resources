@@ -1,31 +1,46 @@
 ---
-##
-# Default parameter values for the various classes of the trivial_resources
-# module.
-##
+################################################################################
+# Default arguments for this Puppet module.
+################################################################################
+# Define a reusable hash alias for deep merge options
+deep_merge: &deep_merge
+  merge:
+    strategy: deep
+    merge_hash_arrays: true
 
-##
-# The default set of hosts for each machine
-trivial_resources::hosts::hostsMap:
-  localhost:
-    ip: 127.0.0.1
-    host_aliases:
-      - localhost.localdomain
-      - localhost4
-      - localhost4.localdomain4
-  localhost6:
-    ip: "::1"
-    host_aliases:
-      - localhost6.localdomain6
-  "%{::hostname}":
-    ip: "%{::ipaddress}"
-    host_aliases:
-      - "%{::fqdn}"
-##
+# Define how class parameters are handled by Hiera lookups
+lookup_options:
+  trivial_resources::firewall_pre_rules:
+    <<: *deep_merge
+  trivial_resources::firewall_post_rules:
+    <<: *deep_merge
+  trivial_resources::tidy_rules:
+    <<: *deep_merge
+  trivial_resources::tidy_rule_defaults:
+    <<: *deep_merge
+  trivial_resources::packages:
+    <<: *deep_merge
+  trivial_resources::package_defaults:
+    <<: *deep_merge
 
-##
+# Package defaults
+trivial_resources::package_defaults:
+  ensure: present
+
+# Tidy rule defaults
+trivial_resources::tidy_rule_defaults:
+  age: 2w
+  recurse: 1
+  rmdirs: false
+
+###
 # The least number of sane firewall rules for each machine
-trivial_resources::firewall::preRules:
+trivial_resources::fw_rule_defaults:
+  proto: all
+  iniface: ! lo
+  action: accept
+
+trivial_resources::fw_pre_rules:
   '000 accept all ICMP':
     proto: icmp
     action: accept
@@ -45,7 +60,7 @@ trivial_resources::firewall::preRules:
       - ESTABLISHED
     action: accept
 
-trivial_resources::firewall::postRules:
+trivial_resources::fw_post_rules:
   '999 drop all':
     proto: all
     action: drop

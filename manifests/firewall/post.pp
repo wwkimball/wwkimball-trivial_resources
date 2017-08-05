@@ -13,7 +13,15 @@
 class trivial_resources::firewall::post {
   # Do nothing unless the firewall module has been loaded
   if defined('firewall') {
-    create_resources(firewall, $trivial_resources::firewall::postRules)
+    pick($trivial_resources::fw_post_rules, {}).each |
+      String $resource_name,
+      Hash   $resource_props,
+    | {
+      firewall {
+        default:        *=> $trivial_resources::fw_rule_defaults;
+        $resource_name: *=> $resource_props;
+      }
+    }
   }
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

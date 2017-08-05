@@ -17,11 +17,6 @@ class trivial_resources::firewall::purge {
     resources { 'firewall':
       purge => true,
     }
-
-    # Causes error:  Invalid argument. Run `dmesg' for more information.
-    #resources { 'firewallchain':
-    #  purge => true,
-    #}
   }
 }
 # vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
