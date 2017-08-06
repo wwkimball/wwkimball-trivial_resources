@@ -36,9 +36,11 @@ trivial_resources::tidy_rule_defaults:
 ###
 # The least number of sane firewall rules for each machine
 trivial_resources::fw_rule_defaults:
-  proto: all
+  proto: tcp
   iniface: ! lo
   action: accept
+  state:
+    - NEW
 
 trivial_resources::fw_pre_rules:
   '000 accept all ICMP':
