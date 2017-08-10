@@ -13,12 +13,12 @@
 #
 class trivial_resources::packages {
   pick($trivial_resources::packages, {}).each |
-    String $resource_name,
-    Hash   $resource_props,
+    String               $resource_name,
+    Hash[String[2], Any] $resource_props,
   | {
     package {
-      default:        *=> $trivial_resources::package_defaults;
-      $resource_name: *=> $resource_props;
+      default:        *=> $trivial_resources::package_defaults,;
+      $resource_name: *=> $resource_props,;
     }
   }
 }
