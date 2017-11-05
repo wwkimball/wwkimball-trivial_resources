@@ -1,0 +1,67 @@
+<%=
+# Now that all the user accounts exist, repeat the "ensure all
+# home-directories exist" exercise to also ensure all these users' .ssh
+# directories exist.  These won't need special splitting treatment because
+# all parent directories have already been handled.
+normalUsers = scope['trivial_resources::users::normal_users']
+allSSHDirs  = {}
+flatPaths   = []
+pathOwners  = {}
+pathGroups  = {}
+
+# Some parameters are Optional, so replace undef with empty-Hash
+if normalUsers.nil?
+  normalUsers = {}
+end
+
+# Pull out all home directories and append .ssh to them.  The result must be
+# unique.  Because Windows has permitted mixed handling of \ and / for a very
+# long time, Puppet also permits mixing them together.  As such, only use / for
+# this to safely handle both Windows and *nix (including OSX).  We must also
+# keep track of which user must own each of these directories and to which group
+# it will belong, if specified.
+normalUsers.each{|userName, userProps|
+  # Skip deleted users
+  if userProps and userProps['ensure'] and userProps['ensure'] != 'present'
+    next
+  end
+
+  # Identify the default or given home directory
+  userHome = ''
+  if userProps and userProps['home']
+    userHome = userProps['home']
+  else
+    userHome = "/home/#{userName}"
+    if userName == 'root'
+      userHome = '/root'
+    end
+  end
+
+  sshDir = "#{userHome}/.ssh"
+  flatPaths = flatPaths | [ sshDir ]
+  pathOwners[sshDir] = userName
+
+  # Use the primary GID, if provided
+  if userProps['gid']
+    pathGroups[sshDir] = userProps['gid']
+  else
+    pathGroups[sshDir] = userName
+  end
+}
+
+# Convert the flat Array to a Hash and ensure these are private directories.
+flatPaths.each{|homeDir|
+  resourceOwner = pathOwners[homeDir]
+  resourceGroup = pathGroups[homeDir]
+
+  allSSHDirs[homeDir] = {
+    'ensure'  => 'directory',
+    'owner'   => resourceOwner,
+    'group'   => resourceGroup,
+    'mode'    => '0700'
+  }
+}
+
+# Send the result back to Puppet
+allSSHDirs.to_yaml
+%>
