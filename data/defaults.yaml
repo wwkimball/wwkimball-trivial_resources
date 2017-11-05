@@ -10,10 +10,6 @@ deep_merge: &deep_merge
 
 # Define how class parameters are handled by Hiera lookups
 lookup_options:
-  trivial_resources::firewall_pre_rules:
-    <<: *deep_merge
-  trivial_resources::firewall_post_rules:
-    <<: *deep_merge
   trivial_resources::tidy_rules:
     <<: *deep_merge
   trivial_resources::tidy_rule_defaults:
@@ -33,39 +29,4 @@ trivial_resources::tidy_rule_defaults:
   recurse: 1
   rmdirs: false
 
-###
-# The least number of sane firewall rules for each machine
-trivial_resources::fw_rule_defaults:
-  proto: tcp
-  iniface: ! lo
-  action: accept
-  state:
-    - NEW
-
-trivial_resources::fw_pre_rules:
-  '000 accept all ICMP':
-    proto: icmp
-    action: accept
-  '001 accept all packets to localhost':
-    proto: all
-    iniface: lo
-    action: accept
-  '002 reject local packets from foreign interfaces':
-    iniface: ! lo
-    proto: all
-    destination: 127.0.0.1/8
-    action: reject
-  '003 permit ongoing traffic':
-    proto: all
-    state:
-      - RELATED
-      - ESTABLISHED
-    action: accept
-
-trivial_resources::fw_post_rules:
-  '999 drop all':
-    proto: all
-    action: drop
-##
-
-# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
+# vim: syntax=yaml:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

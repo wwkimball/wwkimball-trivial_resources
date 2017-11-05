@@ -58,12 +58,8 @@
 #   - trivial_resources
 #
 class trivial_resources(
-  Hash[String, Any]            $fw_rule_defaults,
   Hash[String, Any]            $package_defaults,
   Hash[String, Any]            $tidy_rule_defaults,
-  Optional[Hash[String, Hash]] $fw_app_rules   = undef,
-  Optional[Hash[String, Hash]] $fw_pre_rules   = undef,
-  Optional[Hash[String, Hash]] $fw_post_rules  = undef,
   Optional[Hash[String, Hash]] $ini_files      = undef,
   Optional[Hash[String, Hash]] $packages       = undef,
   Optional[Hash[String, Hash]] $property_files = undef,
@@ -74,7 +70,6 @@ class trivial_resources(
   class { 'trivial_resources::packages': }
   -> class { 'trivial_resources::configfiles': }
   -> class { 'trivial_resources::tidies': }
-  -> class { 'trivial_resources::firewall': }
   -> Class['trivial_resources']
 }
-# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
+# vim: syntax=puppet:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
