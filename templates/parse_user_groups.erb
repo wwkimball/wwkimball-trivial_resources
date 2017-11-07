@@ -32,9 +32,15 @@ def addComplexGroup(groupHash, groupContainer)
     return false
   end
 
-  groupName = groupHash.keys.first
-  groupProps = groupHash.values.first
-
+  if groupHash.has_key?('name')
+    groupName  = groupHash['name']
+    groupProps = groupHash.clone
+    groupProps.delete('name')
+  else
+    groupName  = groupHash.keys.first
+    groupProps = groupHash.values.first
+  end
+  
   # Accept only string names
   if !groupName.is_a?(String)
     return false
@@ -42,14 +48,7 @@ def addComplexGroup(groupHash, groupContainer)
 
   # Convert weird "stringy" values to bona fide strings
   safeName = groupName.to_s
-  if !groupContainer.has_key?(safeName)
-    groupContainer[safeName] = groupProps
-
-    # Ensure the group is created, if not explicitly set
-    if !groupContainer[safeName]['ensure']
-      groupContainer[safeName]['ensure'] = 'present'
-    end
-  else
+  if groupContainer.has_key?(safeName)
     # Group is already defined; check for conflicts
     savedGroup = groupContainer[safeName]
     groupProps.each{|propKey, propVal|
@@ -61,6 +60,13 @@ def addComplexGroup(groupHash, groupContainer)
         groupContainer[safeName][propKey] = propVal
       end
     }
+  else
+    groupContainer[safeName] = groupProps
+
+    # Ensure the group is created, if not explicitly set
+    if !groupContainer[safeName].has_key?('ensure')
+      groupContainer[safeName]['ensure'] = 'present'
+    end
   end
 
   return true
@@ -113,5 +119,14 @@ extractGroups(scope['trivial_resources::users::normal_users'], allGroups)
 extractGroups(scope['trivial_resources::users::system_users'], allGroups)
 
 # Send the result back to Puppet
+message = "allGroups: "
+allGroups.each{ |k,v|
+  message << "[#{k}]: "
+  message << v.map{|m,n| "#{m}=#{n}"}.join('&')
+  message << ', '
+}
+#fail(message)
+#fail(allGroups.map{|k,v| "#{k}=#{v}"}.join('&'))
+
 allGroups.to_yaml
 %>

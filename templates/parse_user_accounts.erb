@@ -12,7 +12,8 @@ if systemUsers.nil?
 end
 
 # Pull out all normal users without any of the custom attributes that this class
-# enables.  Ensure that a home directory is specified and managed lest Puppet
+# enables.  Also remove all custom-extended group data, which is handled
+# elsewhere.  Ensure that a home directory is specified and managed lest Puppet
 # create home-less users.
 normalUsers.each{|userName, userProps|
   # Identify each default or given home directory
@@ -30,6 +31,35 @@ normalUsers.each{|userName, userProps|
     justUsers[userName] = userProps.clone
     justUsers[userName].delete('ssh_authorized_keys')
     justUsers[userName].delete('ssh_generated_keys')
+
+    if userProps.has_key?('groups')
+      justUsers[userName].delete('groups')
+      justUsers[userName]['groups'] = []
+      
+      # May be a simple Array, a complex Hash, or a complex Array-of-Hashes
+      if userProps['groups'].is_a?(Hash)
+        userProps['groups'].each{|groupName, _|
+          justUsers[userName]['groups'] << groupName
+        }
+      elsif userProps['groups'].kind_of?(Array)
+        userProps['groups'].each{|groupElement|
+          if groupElement.is_a?(Hash)
+            if groupElement.has_key?('name')
+              justUsers[userName]['groups'] << groupElement['name'].to_s
+            elsif groupElement.has_key?('title')
+              justUsers[userName]['groups'] << groupElement['title'].to_s
+            else
+              fail("Unsupported complex data type employed for user groups.  Use either a simple Array of Strings, or an Array of Hashes, each with a 'name' String.")
+            end
+          else
+            justUsers[userName]['groups'] << groupElement
+          end
+        }
+      else
+        # Assume the value is scalar and is meant to be the group name
+        justUsers[userName]['groups'] = [userProps['groups'].to_s]
+      end
+    end
   else
     justUsers[userName] = {}
   end
@@ -55,6 +85,35 @@ systemUsers.each{|userName, userProps|
     justUsers[userName] = userProps.clone
     justUsers[userName].delete('ssh_authorized_keys')
     justUsers[userName].delete('ssh_generated_keys')
+
+    if userProps.has_key?('groups')
+      justUsers[userName].delete('groups')
+      justUsers[userName]['groups'] = []
+      
+      # May be a simple Array, a complex Hash, or a complex Array-of-Hashes
+      if userProps['groups'].is_a?(Hash)
+        userProps['groups'].each{|groupName, _|
+          justUsers[userName]['groups'] << groupName
+        }
+      elsif userProps['groups'].kind_of?(Array)
+        userProps['groups'].each{|groupElement|
+          if groupElement.is_a?(Hash)
+            if groupElement.has_key?('name')
+              justUsers[userName]['groups'] << groupElement['name'].to_s
+            elsif groupElement.has_key?('title')
+              justUsers[userName]['groups'] << groupElement['title'].to_s
+            else
+              fail("Unsupported complex data type employed for user groups.  Use either a simple Array of Strings, or an Array of Hashes, each with a 'name' String.")
+            end
+          else
+            justUsers[userName]['groups'] << groupElement
+          end
+        }
+      else
+        # Assume the value is scalar and is meant to be the group name
+        justUsers[userName]['groups'] = [userProps['groups'].to_s]
+      end
+    end
   else
     justUsers[userName] = {}
   end
