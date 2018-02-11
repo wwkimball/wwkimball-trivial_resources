@@ -3,7 +3,10 @@
 # This class generically manages tidy rules, which delete aging files and
 # directories.
 #
-# Parameters:  see init.pp
+# Parameters:
+# - tidy_rules:  A hash of rule definitions based on
+#   https://docs.puppetlabs.com/puppet/latest/reference/type.html#tidy
+#   excluding all resource dependency attributes (before/after/require/notify).
 #
 # Actions:
 # - Ensures the specified tidy rules are defined
@@ -21,15 +24,18 @@
 #     recurse: 1
 #     rmdirs: true
 #
-class trivial_resources::tidies {
-  pick($trivial_resources::tidy_rules, {}).each |
+class trivial_resources::tidies(
+  Hash[String, Any]  $defaults,
+  Hash[String, Hash] $resources,
+) {
+  pick($resources, {}).each |
     String $resource_name,
     Hash   $resource_props,
   | {
     tidy {
-      default:        *=> $trivial_resources::tidy_rule_defaults;
+      default:        *=> $defaults;
       $resource_name: *=> $resource_props;
     }
   }
 }
-# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
+# vim: syntax=puppet:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

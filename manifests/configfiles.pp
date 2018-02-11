@@ -8,7 +8,47 @@
 # end-user preference files).  Supported types include "Java-style Properties",
 # "Shell Script Variables", "Windows-style INI", and XML.
 #
-# Parameters:  see init.pp
+# Parameters:
+# - ini_files: Hash with repeating* structure:
+#   FILE_PATH*:
+#     ensure: absent|present
+#     owner: File owner's name or ID
+#     group: File owner's group or GID
+#     config:
+#       SECTION_NAME*:
+#         KEY_NAME*: VALUE
+# - property_files:
+#   FILE_PATH*:
+#     ensure: absent|present
+#     owner: File owner's name or ID
+#     group: File owner's group or GID
+#     config:
+#       KEY_NAME*: VALUE
+# - shell_files:
+#   FILE_PATH*:
+#     ensure: absent|present
+#     owner: File owner's name or ID
+#     group: File owner's group or GID
+#     config:
+#       KEY_NAME*: VALUE
+#       export:
+#         EXPORT_KEY*: Scalar value you need exported to subprocesses
+#       prepend:
+#         CONCAT_KEY*: Value that must be prefixed to same-named variables
+#       append:
+#         CONCAT_KEY*: Value to append to the end of same-named variables
+#       exportprepend:
+#         EXPORT_CAT*: Exports a prepended value
+#       exportappend:
+#         EXPORT_CAT*: Exports an appended value
+# - xml_files:
+#   FILE_PATH:
+#     ensure: absent|present
+#     owner: File owner's name or ID
+#     group: File owner's group or GID
+#     config:
+#       ROOT_CONTAINER_NAME:
+#         XML_SERIALIZED_AS_YAML
 #
 # Actions:
 # - Creates or destroys the indicated configuration files
@@ -90,8 +130,13 @@
 #               memory: 512
 #               priority: 10
 #
-class trivial_resources::configfiles {
-  pick($trivial_resources::ini_files, {}).each |
+class trivial_resources::configfiles(
+  Optional[Hash[String, Hash]] $ini_files      = undef,
+  Optional[Hash[String, Hash]] $property_files = undef,
+  Optional[Hash[String, Hash]] $shell_files    = undef,
+  Optional[Hash[String, Hash]] $xml_files      = undef,
+) {
+  pick($ini_files, {}).each |
     String $resource_name,
     Hash   $resource_props,
   | {
@@ -100,7 +145,7 @@ class trivial_resources::configfiles {
     }
   }
 
-  pick($trivial_resources::property_files, {}).each |
+  pick($property_files, {}).each |
     String $resource_name,
     Hash   $resource_props,
   | {
@@ -109,7 +154,7 @@ class trivial_resources::configfiles {
     }
   }
 
-  pick($trivial_resources::shell_files, {}).each |
+  pick($shell_files, {}).each |
     String $resource_name,
     Hash   $resource_props,
   | {
@@ -118,7 +163,7 @@ class trivial_resources::configfiles {
     }
   }
 
-  pick($trivial_resources::xml_files, {}).each |
+  pick($xml_files, {}).each |
     String $resource_name,
     Hash   $resource_props,
   | {
@@ -127,4 +172,4 @@ class trivial_resources::configfiles {
     }
   }
 }
-# vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
+# vim: syntax=puppet:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

@@ -3,30 +3,47 @@
 # Default arguments for this Puppet module.
 ################################################################################
 # Define a reusable hash alias for deep merge options
-deep_merge: &deep_merge
+trivial_resources::deep_merge: &deep_merge
   merge:
     strategy: deep
     merge_hash_arrays: true
+    knockout_prefix: --
 
 # Define how class parameters are handled by Hiera lookups
 lookup_options:
-  trivial_resources::tidy_rules:
+  '^trivial_resources::.*::defaults$':
     <<: *deep_merge
-  trivial_resources::tidy_rule_defaults:
+  '^trivial_resources::.*::resources$':
     <<: *deep_merge
-  trivial_resources::packages:
+  '^trivial_resources::users::.*_users$':
     <<: *deep_merge
-  trivial_resources::package_defaults:
+  '^trivial_resources::repos::.*$':
     <<: *deep_merge
+  
 
 # Package defaults
-trivial_resources::package_defaults:
+trivial_resources::packages::defaults:
   ensure: present
 
 # Tidy rule defaults
-trivial_resources::tidy_rule_defaults:
+trivial_resources::tidies::defaults:
   age: 2w
   recurse: 1
   rmdirs: false
+
+# Mount Point defaults
+trivial_resources::mounts::defaults:
+  ensure: mounted
+  atboot: true
+  dump: 0
+  pass: 0
+  remounts: true
+
+# Directory defaults
+trivial_resources::directories::defaults:
+  owner: root
+  group: root
+  mode: '0775'
+  force: true
 
 # vim: syntax=yaml:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai

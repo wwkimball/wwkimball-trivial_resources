@@ -1,17 +1,17 @@
-# Class: trivial_resources::packages
+# Class: trivial_resources::directories
 #
-# This subclass manages a Hiera-defined collection of packages.
+# This subclass manages a Hiera-defined collection of directories.
 #
 # Parameters:  see init.pp
 #
 # Actions:
-# - Manages the Hiera-defined packages as specified in the configuration data.
+# - Manages the Hiera-defined directories as specified in the configuration data.
 #
 # Requires: see init.pp
 #
 # Sample Usage: see init.pp
 #
-class trivial_resources::packages(
+class trivial_resources::directories(
   Hash[String, Any]  $defaults,
   Hash[String, Hash] $resources,
 ) {
@@ -19,9 +19,13 @@ class trivial_resources::packages(
     String               $resource_name,
     Hash[String[2], Any] $resource_props,
   | {
-    package {
-      default:        *=> $defaults,;
-      $resource_name: *=> $resource_props,;
+    file {
+      default:
+        * => $defaults,;
+
+      $resource_name:
+        ensure => directory,
+        *      => $resource_props,;
     }
   }
 }

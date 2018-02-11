@@ -1,0 +1,47 @@
+<%=
+# Parse out all of the parent directories of each users' home directory.
+normalUsers = scope['trivial_resources::users::normal_users']
+allHomeDirs = {}
+flatPaths   = []
+
+# Some parameters are Optional, so replace undef with empty-Hash
+if normalUsers.nil?
+  normalUsers = {}
+end
+
+# Pull out all directories that are parents of the actual user home directories
+# by splitting them apart using the pltraining/dirtree function.  The result
+# must be unique.
+normalUsers.each{|userName, userProps|
+  # Skip deleted users
+  if userProps and userProps['ensure'] and userProps['ensure'] != 'present'
+    next
+  end
+
+  # Identify each default or given home directory
+  userHome = ''
+  if userProps and userProps['home']
+    userHome = userProps['home']
+  else
+    userHome = "/home/#{userName}"
+    if userName == 'root'
+      userHome = '/root'
+    end
+  end
+
+  scope.call_function('dirtree', [userHome, '/home']).each{|homePart|
+    flatPaths = flatPaths | [ homePart ]
+  }
+  flatPaths.delete(userHome)
+}
+
+# Convert the flat Array to a Hash and ensure these are directories.
+flatPaths.each{|homeDir|
+  allHomeDirs[homeDir] = {
+    'ensure' => 'directory'
+  }
+}
+
+# Send the result back to Puppet
+allHomeDirs.to_yaml
+%>

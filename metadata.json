@@ -1,10 +1,10 @@
 {
-  "author": "William Kimball",
+  "author": "William W. Kimball, Jr., MBA, MSIS",
   "dependencies": [
     { "name": "puppetlabs/stdlib", "version_requirement": "4.x" },
-    { "name": "puppetlabs/firewall", "version_requirement": "1.x" }
+    { "name": "pltraining/dirtree", "version_requirement": "0.3.x" }
   ],
-  "license": "APLv2",
+  "license": "Apache-2.0",
   "name": "wkimball-trivial_resources",
   "operatingsystem_support": [
     {
@@ -22,6 +22,6 @@
   ],
   "source": "ssh://git@bitbucket.org:kimballstuff/wkimball-trivial_resources.git",
   "summary": "Puppet-managed resources that are too trivial to warrant their own full-fledged Puppet modules.",
-  "tags": [],
-  "version": "0.1.0"
+  "tags": [ "user", "yumrepo", "xml", "ini", "host", "mount", "package", "tidy" ],
+  "version": "0.1.2"
 }
