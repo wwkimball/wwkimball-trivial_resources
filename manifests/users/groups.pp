@@ -10,8 +10,16 @@
 class trivial_resources::users::groups {
   $all_resources = parseyaml(template("${module_name}/parse_user_groups.erb"))
   $all_resources.each | String $resource_name, Hash $resource_props | {
-    group { $resource_name:
-      * => $resource_props,
+    # Users can be added to groups that are managed elsewhere
+    if !defined(Group[$resource_name]) {
+	    group { $resource_name:
+	      * => $resource_props,
+	    }
+    } else {
+      # However, ensure any additional attributes are applied as requested
+      Group <| title == $resource_name |> {
+        * => $resource_props,
+      }
     }
   }
 }

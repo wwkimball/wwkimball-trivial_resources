@@ -23,5 +23,5 @@
   "source": "ssh://git@bitbucket.org:kimballstuff/wkimball-trivial_resources.git",
   "summary": "Puppet-managed resources that are too trivial to warrant their own full-fledged Puppet modules.",
   "tags": [ "user", "yumrepo", "xml", "ini", "host", "mount", "package", "tidy" ],
-  "version": "0.1.3"
+  "version": "0.1.4"
 }
