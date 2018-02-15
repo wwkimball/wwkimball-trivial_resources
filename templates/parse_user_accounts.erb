@@ -49,7 +49,7 @@ normalUsers.each{|userName, userProps|
             elsif groupElement.has_key?('title')
               justUsers[userName]['groups'] << groupElement['title'].to_s
             else
-              fail("Unsupported complex data type employed for user groups.  Use either a simple Array of Strings, or an Array of Hashes, each with a 'name' String.")
+              justUsers[userName]['groups'] << groupElement.keys.first.to_s
             end
           else
             justUsers[userName]['groups'] << groupElement
@@ -103,7 +103,7 @@ systemUsers.each{|userName, userProps|
             elsif groupElement.has_key?('title')
               justUsers[userName]['groups'] << groupElement['title'].to_s
             else
-              fail("Unsupported complex data type employed for user groups.  Use either a simple Array of Strings, or an Array of Hashes, each with a 'name' String.")
+              justUsers[userName]['groups'] << groupElement.keys.first.to_s
             end
           else
             justUsers[userName]['groups'] << groupElement
