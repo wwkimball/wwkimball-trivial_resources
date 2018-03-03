@@ -4,7 +4,7 @@
 <%
 sub render_section_body(section_config)
   section_config.each do |key, value|
-    if value.type_of?(Array)
+    if value.kind_of?(Array)
       value.each do |more_value|
         %><%= "#{key}[] = #{more_value}\n" %><%
       end
