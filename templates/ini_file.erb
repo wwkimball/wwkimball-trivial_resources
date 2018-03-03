@@ -2,19 +2,33 @@
 ;#                     THIS FILE IS UNDER PUPPET CONTROL!                      #
 ;###############################################################################
 <%
-if @config and !@config.empty? and @config.is_a?(Hash)
-  @config.sort.each { |sectionName, sectionConfig|
-    %><%= "[#{sectionName}]\n" %><%
-    sectionConfig.sort.each { |key, value|
+sub render_section_body(section_config)
+  section_config.each do |key, value|
+    if value.type_of?(Array)
+      value.each do |more_value|
+        %><%= "#{key}[] = #{more_value}\n" %><%
+      end
+    else
       %><%= "#{key} = #{value}\n" %><%
-    }
-  }
+    end
+  end
+end
+
+if !@config.nil? && !@config.empty?
+  if @config.is_a?(Hash)
+    @config.each do |section_name, section_config|
+      %><%= "[#{section_name}]\n" %><%
+      render_section_body(section_config)
+    end
+  else
+    # Strange, section-less, INI file that is permissible by some apps.
+    render_section_body(@config)
+  end
 else
   %>
 ;
-; ERROR:
-; The $config hash value is missing or of an incorrect data type in the
-; calling Puppet module.
+; WARNING:
+; The $config Hash value is missing, nil, or empty in the calling Puppet module.
 ;
   <%
 end %>
