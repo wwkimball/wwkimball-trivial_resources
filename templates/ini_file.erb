@@ -2,14 +2,15 @@
 ;#                     THIS FILE IS UNDER PUPPET CONTROL!                      #
 ;###############################################################################
 <%
-sub render_section_body(section_config)
-  section_config.each do |key, value|
-    if value.kind_of?(Array)
-      value.each do |more_value|
-        %><%= "#{key}[] = #{more_value}\n" %><%
+# Function to render an INI-style section's contents
+def render_section_body(section_config, stream)
+  section_config.each do |entry_key, entry_value|
+    if entry_value.kind_of?(Array)
+      entry_value.each do |array_value|
+        stream << "#{entry_key}[] = #{array_value}\n"
       end
     else
-      %><%= "#{key} = #{value}\n" %><%
+      stream << "#{entry_key} = #{entry_value}\n"
     end
   end
 end
@@ -17,12 +18,12 @@ end
 if !@config.nil? && !@config.empty?
   if @config.is_a?(Hash)
     @config.each do |section_name, section_config|
-      %><%= "[#{section_name}]\n" %><%
-      render_section_body(section_config)
+      _erbout << "[#{section_name}]\n"
+      render_section_body(section_config, _erbout)
     end
   else
     # Strange, section-less, INI file that is permissible by some apps.
-    render_section_body(@config)
+    render_section_body(@config, _erbout)
   end
 else
   %>
@@ -31,4 +32,5 @@ else
 ; The $config Hash value is missing, nil, or empty in the calling Puppet module.
 ;
   <%
-end %>
+end
+%>
