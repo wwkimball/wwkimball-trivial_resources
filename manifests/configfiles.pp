@@ -17,6 +17,13 @@
 #     config:
 #       SECTION_NAME*:
 #         KEY_NAME*: VALUE
+# - json_files:
+#   FILE_PATH*:
+#     ensure: absent|present
+#     owner: File owner's name or ID
+#     group: File owner's group or GID
+#     config:
+#       KEY_NAME*: VALUE
 # - property_files:
 #   FILE_PATH*:
 #     ensure: absent|present
@@ -77,6 +84,19 @@
 #             - Value 2
 #             - Value N
 #
+#   trivial_resources::json_files:
+#     '/etc/myapp/app.json':
+#       config:
+#         someKey: Some Value
+#         anotherKey: Another Value
+#         anArray:
+#           - element 1
+#           - element 2
+#           - etc.
+#         aHash:
+#           subKey1: Some Value
+#           subKey2: Another Value
+#
 #   trivial_resources::property_files:
 #     '/etc/myapp/app.properties':
 #       config:
@@ -132,6 +152,7 @@
 #
 class trivial_resources::configfiles(
   Optional[Hash[String, Hash]] $ini_files      = undef,
+  Optional[Hash[String, Hash]] $json_files     = undef,
   Optional[Hash[String, Hash]] $property_files = undef,
   Optional[Hash[String, Hash]] $shell_files    = undef,
   Optional[Hash[String, Hash]] $xml_files      = undef,
@@ -141,6 +162,15 @@ class trivial_resources::configfiles(
     Hash   $resource_props,
   | {
     ::trivial_resources::defines::ini_file {
+      $resource_name: *=> $resource_props;
+    }
+  }
+
+  pick($json_files, {}).each |
+    String $resource_name,
+    Hash   $resource_props,
+  | {
+    ::trivial_resources::defines::json_file {
       $resource_name: *=> $resource_props;
     }
   }

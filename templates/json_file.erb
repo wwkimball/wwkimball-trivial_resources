@@ -1,0 +1,10 @@
+<%
+# JSON doesn't support comments, so we can't add the usual "Managed by Puppet"
+# header.
+require 'json'
+if @config.nil? || @config.empty?
+	%>{"warning": "The $config Hash value is missing, nil, or empty in the calling Puppet module."}<%
+else
+	%><%=JSON.pretty_generate(@config)%><%
+end
+%>
