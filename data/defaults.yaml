@@ -46,4 +46,10 @@ trivial_resources::directories::defaults:
   mode: '0775'
   force: true
 
+# Symbolic link defaults
+trivial_resources::symlinks::defaults:
+  owner: root
+  group: root
+  mode: '0775'
+
 # vim: syntax=yaml:tabstop=2:softtabstop=2:shiftwidth=2:expandtab:ai
